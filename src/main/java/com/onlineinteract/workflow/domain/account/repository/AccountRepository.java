@@ -73,4 +73,10 @@ public class AccountRepository {
 
 		return allAccounts;
 	}
+	
+	public void removeAllDocuments() {
+		MongoDatabase database = dbClient.getMongoClient().getDatabase(DbClient.DATABASE);
+		MongoCollection<Document> accountsCollection = database.getCollection("accounts");
+		accountsCollection.deleteMany(new BasicDBObject());
+	}
 }
