@@ -22,7 +22,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.onlineinteract.workflow.dbclient.DbClient;
 import com.onlineinteract.workflow.domain.account.repository.AccountRepository;
-import com.onlineinteract.workflow.domain.account.v1.AccountEvent;
+import com.onlineinteract.workflow.domain.account.AccountEvent;
 import com.onlineinteract.workflow.domain.account.v1.AccountV1;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.model.SnapshotInfo.Domain;
@@ -154,20 +154,20 @@ public class SnapshotV1 {
 		publishSnapshotMarkerEvent("SnapshotBeginEvent");
 		for (Document accountDocument : accountDocumentsIterable) {
 			MongoUtility.removeMongoId(accountDocument);
-			AccountV1 account = JsonParser.fromJson(accountDocument.toJson(), AccountV1.class);
-			publishSnapshotEvent("SnapshotEvent", account);
+			AccountV1 accountV1 = JsonParser.fromJson(accountDocument.toJson(), AccountV1.class);
+			publishSnapshotEvent("SnapshotEvent", accountV1);
 			System.out.println("AccountCreatedEvent Published to account-event-topic");
 		}
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
 
-	private void publishSnapshotEvent(String eventType, AccountV1 account) {
+	private void publishSnapshotEvent(String eventType, AccountV1 accountV1) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		accountEvent.setV1(account);
-		producer.publishRecord("account-event-topic", accountEvent, account.getId().toString());
+		accountEvent.setV1(accountV1);
+		producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -175,13 +175,13 @@ public class SnapshotV1 {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		AccountV1 account = new AccountV1();
-		account.setId("");
-		account.setName("");
-		account.setOpeningBalance("");
-		account.setSavingsRate("");
-		account.setType("");
-		accountEvent.setV1(account);
+		AccountV1 accountV1 = new AccountV1();
+		accountV1.setId("");
+		accountV1.setName("");
+		accountV1.setOpeningBalance("");
+		accountV1.setSavingsRate("");
+		accountV1.setType("");
+		accountEvent.setV1(accountV1);
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
 	}
 
