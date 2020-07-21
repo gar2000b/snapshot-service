@@ -60,6 +60,7 @@ public class SnapshotV1 {
 		reconstituteState();
 		writeSnapshot();
 		updateSnapshotInfo();
+		resetSnapshotOffsets();
 	}
 
 	private void createConsumer() {
@@ -142,6 +143,11 @@ public class SnapshotV1 {
 	}
 
 	private void writeSnapshot() {
+		if (endSnapshotOffset < beginSnapshotOffset) {
+			System.out.println("**** No events have been published since last snapshot - snapshot not required ****");
+			return;
+		}
+
 		MongoDatabase database = dbClient.getMongoClient().getDatabase(DbClient.DATABASE);
 		MongoCollection<Document> accountsCollection = database.getCollection("accounts");
 		FindIterable<Document> accountDocumentsIterable = accountsCollection.find();
@@ -224,9 +230,15 @@ public class SnapshotV1 {
 			for (Version version : versions) {
 				if (version.getVersion() == 1) {
 					beginSnapshotOffset = version.getEndSnapshotOffset() + 1;
+					endSnapshotOffset = version.getEndSnapshotOffset();
 				}
 			}
 		}
+	}
+
+	private void resetSnapshotOffsets() {
+		beginSnapshotOffset = 0;
+		endSnapshotOffset = 0;
 	}
 
 	@PreDestroy

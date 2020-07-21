@@ -1,4 +1,4 @@
-{"namespace": "com.onlineinteract.workflow.domain.account",
+{"namespace": "com.onlineinteract.workflow.domain.account.v1",
  "type": "record",
  "name":"AccountEvent",
  "fields": [
