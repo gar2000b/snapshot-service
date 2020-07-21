@@ -179,7 +179,7 @@ public class SnapshotConsumerV1 {
 
 		List<Version> versions = accountsDomain.getVersions();
 		for (Version version : versions) {
-			if (version.getVersion().equals("1")) {
+			if (version.getVersion() == 1) {
 				version.setBeginSnapshotOffset(beginSnapshotOffset);
 				version.setEndSnapshotOffset(endSnapshotOffset);
 				break;
@@ -196,7 +196,7 @@ public class SnapshotConsumerV1 {
 		Version version = new Version();
 		version.setBeginSnapshotOffset(beginSnapshotOffset);
 		version.setEndSnapshotOffset(endSnapshotOffset);
-		version.setVersion("1");
+		version.setVersion(1);
 		ArrayList<Version> versions = new ArrayList<Version>();
 		versions.add(version);
 		accountsDomain.setVersions(versions);
@@ -212,7 +212,7 @@ public class SnapshotConsumerV1 {
 		} else {
 			List<Version> versions = accountsDomain.getVersions();
 			for (Version version : versions) {
-				if (version.getVersion().equals("1")) {
+				if (version.getVersion() == 1) {
 					beginSnapshotOffset = version.getEndSnapshotOffset() + 1;
 				}
 			}

@@ -22,7 +22,7 @@ public class SnapshotInfoTest {
 		domain1.setTopic("account-event-topic");
 		domain1.setCron("cron-expression");
 		Version version = new Version();
-		version.setVersion("1");
+		version.setVersion(1);
 		version.setEndSnapshotOffset(103523);
 		List<Version> versions = new ArrayList<>();
 		versions.add(version);
@@ -34,7 +34,7 @@ public class SnapshotInfoTest {
 				+ "        \"accounts\" : {\r\n" + "            \"collection\" : \"accounts\",\r\n"
 				+ "            \"topic\" : \"account-event-topic\",\r\n" + "            \"cron\" : null,\r\n"
 				+ "            \"versions\" : [ \r\n" + "                {\r\n"
-				+ "                    \"version\" : \"1\",\r\n"
+				+ "                    \"version\" : 1,\r\n"
 				+ "                    \"beginSnapshotOffset\" : 11,\r\n"
 				+ "                    \"endSnapshotOffset\" : 10\r\n" + "                }\r\n" + "            ]\r\n"
 				+ "        }\r\n" + "    },\r\n" + "    \"name\" : \"SnapshotInfo\"\r\n" + "}", SnapshotInfo.class);

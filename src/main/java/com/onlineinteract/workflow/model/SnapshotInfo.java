@@ -156,18 +156,18 @@ public class SnapshotInfo {
 	}
 
 	public static class Version {
-		private String version;
+		private long version;
 		private long beginSnapshotOffset;
 		private long endSnapshotOffset;
 
 		public Version() {
 		}
 
-		public String getVersion() {
+		public long getVersion() {
 			return version;
 		}
 
-		public void setVersion(String version) {
+		public void setVersion(long version) {
 			this.version = version;
 		}
 
@@ -193,7 +193,7 @@ public class SnapshotInfo {
 			int result = 1;
 			result = prime * result + (int) (beginSnapshotOffset ^ (beginSnapshotOffset >>> 32));
 			result = prime * result + (int) (endSnapshotOffset ^ (endSnapshotOffset >>> 32));
-			result = prime * result + ((version == null) ? 0 : version.hashCode());
+			result = prime * result + (int) (version ^ (version >>> 32));
 			return result;
 		}
 
@@ -210,10 +210,7 @@ public class SnapshotInfo {
 				return false;
 			if (endSnapshotOffset != other.endSnapshotOffset)
 				return false;
-			if (version == null) {
-				if (other.version != null)
-					return false;
-			} else if (!version.equals(other.version))
+			if (version != other.version)
 				return false;
 			return true;
 		}
