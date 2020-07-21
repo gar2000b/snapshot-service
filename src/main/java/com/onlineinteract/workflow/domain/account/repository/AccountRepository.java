@@ -14,7 +14,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.onlineinteract.workflow.dbclient.DbClient;
-import com.onlineinteract.workflow.domain.account.AccountV1;
+import com.onlineinteract.workflow.domain.account.v1.AccountV1;
 import com.onlineinteract.workflow.utility.JsonParser;
 import com.onlineinteract.workflow.utility.MongoUtility;
 
