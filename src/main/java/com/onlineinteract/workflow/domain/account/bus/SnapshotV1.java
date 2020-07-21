@@ -34,7 +34,7 @@ import com.onlineinteract.workflow.utility.MongoUtility;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 @Component
-public class SnapshotConsumerV1 {
+public class SnapshotV1 {
 
 	private static final String ACCOUNT_EVENT_TOPIC = "account-event-topic";
 
@@ -77,11 +77,16 @@ public class SnapshotConsumerV1 {
 		consumer.poll(0);
 		for (TopicPartition partition : consumer.assignment())
 			consumer.seek(partition, beginSnapshotOffset);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		runningFlag = true;
 		System.out.println("Spinning up kafka account consumer");
 		while (runningFlag) {
-			ConsumerRecords<String, AccountEvent> records = consumer.poll(1000);
+			ConsumerRecords<String, AccountEvent> records = consumer.poll(100);
 			System.out.println("*** records count 2: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
@@ -107,12 +112,17 @@ public class SnapshotConsumerV1 {
 		consumer.poll(0);
 		for (TopicPartition partition : consumer.assignment())
 			consumer.seek(partition, beginSnapshotOffset);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 
 		runningFlag = true;
 		System.out.println("Spinning up kafka account consumer to reconstitute previous snapshot prior to "
 				+ "replaying events on top to create new snapshot");
 		while (runningFlag) {
-			ConsumerRecords<String, AccountEvent> records = consumer.poll(1000);
+			ConsumerRecords<String, AccountEvent> records = consumer.poll(100);
 			System.out.println("*** records count 1: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());

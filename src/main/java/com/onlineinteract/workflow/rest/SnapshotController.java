@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.onlineinteract.workflow.domain.account.bus.SnapshotConsumerV1;
+import com.onlineinteract.workflow.domain.account.bus.SnapshotV1;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.repository.SnapshotRepository;
 import com.onlineinteract.workflow.utility.JsonParser;
@@ -24,7 +24,7 @@ public class SnapshotController {
 	SnapshotRepository snapshotRepository;
 
 	@Autowired
-	SnapshotConsumerV1 snapshotConsumerV1;
+	SnapshotV1 snapshotConsumerV1;
 
 	@RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json", value = "/snapshot-info")
 	@ResponseBody
