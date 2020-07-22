@@ -22,7 +22,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.onlineinteract.workflow.dbclient.DbClient;
 import com.onlineinteract.workflow.domain.account.repository.AccountRepository;
-import com.onlineinteract.workflow.domain.account.v1.AccountEvent;
+import com.onlineinteract.workflow.domain.account.AccountEvent;
 import com.onlineinteract.workflow.domain.account.v1.AccountV1;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.model.SnapshotInfo.Domain;
