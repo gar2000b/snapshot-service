@@ -128,11 +128,13 @@ public class SnapshotV1 {
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
 				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
-				if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent"))
+				if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
+						&& accountEvent.getVersion() == 1)
 					System.out.println("Snapshot begin event detected");
-				if (accountEvent.getEventType().toString().contains("SnapshotEvent"))
+				if (accountEvent.getEventType().toString().contains("SnapshotEvent") && accountEvent.getVersion() == 1)
 					accountRepository.createAccount(accountEvent.getV1());
-				if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")) {
+				if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")
+						&& accountEvent.getVersion() == 1) {
 					System.out.println("Snapshot end event detected");
 					return;
 				}
@@ -166,6 +168,7 @@ public class SnapshotV1 {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
+		accountEvent.setVersion(1L);
 		accountEvent.setV1(accountV1);
 		producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
 	}
@@ -175,6 +178,7 @@ public class SnapshotV1 {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
+		accountEvent.setVersion(1L);
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
 	}
 

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.onlineinteract.workflow.domain.account.AccountEvent;
-import com.onlineinteract.workflow.domain.account.v1.AccountV1;
+import com.onlineinteract.workflow.domain.account.v2.AccountV2;
 
 @Component
 public class EventGenerator {
@@ -14,23 +14,25 @@ public class EventGenerator {
 	@Autowired
 	private Producer producer;
 
-	public void createAccount(AccountV1 account) {
+	public void createAccount(AccountV2 account) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType("AccountCreatedEvent");
-		accountEvent.setV1(account);
+		accountEvent.setVersion(2L);
+		accountEvent.setV2(account);
 
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getV1().getId().toString());
 		System.out.println("AccountCreatedEvent Published to account-event-topic");
 	}
 
-	public void updateAccount(AccountV1 account) {
+	public void updateAccount(AccountV2 account) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType("AccountUpdatedEvent");
-		accountEvent.setV1(account);
+		accountEvent.setVersion(2L);
+		accountEvent.setV2(account);
 
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getV1().getId().toString());
 		System.out.println("AccountUpdatedEvent Published to account-event-topic");
