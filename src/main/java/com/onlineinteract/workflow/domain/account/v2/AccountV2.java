@@ -10,15 +10,15 @@ import org.apache.avro.specific.SpecificData;
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
 public class AccountV2 extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -9165770666614349930L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AccountV2\",\"namespace\":\"com.onlineinteract.workflow.domain.account.v2\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"openingBalance\",\"type\":\"string\"},{\"name\":\"savingsRate\",\"type\":\"string\"},{\"name\":\"enabled\",\"type\":\"boolean\"},{\"name\":\"addr1\",\"type\":\"string\"},{\"name\":\"addr2\",\"type\":\"string\"}]}");
+  private static final long serialVersionUID = -5174151809581333574L;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"AccountV2\",\"namespace\":\"com.onlineinteract.workflow.domain.account.v2\",\"fields\":[{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"type\",\"type\":\"string\"},{\"name\":\"openingBalance\",\"type\":\"string\"},{\"name\":\"savingsRate\",\"type\":\"string\"},{\"name\":\"enabled\",\"type\":[\"null\",\"boolean\"],\"default\":true},{\"name\":\"addr1\",\"type\":[\"null\",\"string\"],\"default\":\"\"},{\"name\":\"addr2\",\"type\":[\"null\",\"string\"],\"default\":\"\"}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
   @Deprecated public java.lang.CharSequence id;
   @Deprecated public java.lang.CharSequence name;
   @Deprecated public java.lang.CharSequence type;
   @Deprecated public java.lang.CharSequence openingBalance;
   @Deprecated public java.lang.CharSequence savingsRate;
-  @Deprecated public boolean enabled;
+  @Deprecated public java.lang.Boolean enabled;
   @Deprecated public java.lang.CharSequence addr1;
   @Deprecated public java.lang.CharSequence addr2;
 
@@ -248,7 +248,7 @@ public class AccountV2 extends org.apache.avro.specific.SpecificRecordBase imple
     private java.lang.CharSequence type;
     private java.lang.CharSequence openingBalance;
     private java.lang.CharSequence savingsRate;
-    private boolean enabled;
+    private java.lang.Boolean enabled;
     private java.lang.CharSequence addr1;
     private java.lang.CharSequence addr2;
 
@@ -545,7 +545,7 @@ public class AccountV2 extends org.apache.avro.specific.SpecificRecordBase imple
       * @param value The value of 'enabled'.
       * @return This builder.
       */
-    public com.onlineinteract.workflow.domain.account.v2.AccountV2.Builder setEnabled(boolean value) {
+    public com.onlineinteract.workflow.domain.account.v2.AccountV2.Builder setEnabled(java.lang.Boolean value) {
       validate(fields()[5], value);
       this.enabled = value;
       fieldSetFlags()[5] = true;
@@ -566,6 +566,7 @@ public class AccountV2 extends org.apache.avro.specific.SpecificRecordBase imple
       * @return This builder.
       */
     public com.onlineinteract.workflow.domain.account.v2.AccountV2.Builder clearEnabled() {
+      enabled = null;
       fieldSetFlags()[5] = false;
       return this;
     }
