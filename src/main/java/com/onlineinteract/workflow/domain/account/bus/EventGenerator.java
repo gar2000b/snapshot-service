@@ -19,6 +19,7 @@ public class EventGenerator {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType("AccountCreatedEvent");
+		accountEvent.setVersion(1L);
 		accountEvent.setV1(accountV1);
 
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getV1().getId().toString());
@@ -30,6 +31,7 @@ public class EventGenerator {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType("AccountUpdatedEvent");
+		accountEvent.setVersion(1L);
 		accountEvent.setV1(accountV1);
 
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getV1().getId().toString());

@@ -91,14 +91,14 @@ public class SnapshotV1 {
 			System.out.println("*** records count 2: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
-				AccountEvent account = (AccountEvent) consumerRecord.value();
-				if (account.getEventType().toString().contains("AccountCreatedEvent"))
-					accountRepository.createAccount(account.getV1());
-				if (account.getEventType().toString().contains("AccountUpdatedEvent"))
-					accountRepository.updateAccount(account.getV1());
-				if (!(account.getEventType().toString().contains("SnapshotBeginEvent")
-						|| account.getEventType().toString().contains("SnapshotEvent")
-						|| account.getEventType().toString().contains("SnapshotEndEvent"))) {
+				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
+				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent"))
+					accountRepository.createAccount(accountEvent.getV1());
+				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent"))
+					accountRepository.updateAccount(accountEvent.getV1());
+				if (!(accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
+						|| accountEvent.getEventType().toString().contains("SnapshotEvent")
+						|| accountEvent.getEventType().toString().contains("SnapshotEndEvent"))) {
 					endSnapshotOffset = consumerRecord.offset();
 				}
 			}
@@ -127,12 +127,12 @@ public class SnapshotV1 {
 			System.out.println("*** records count 1: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
-				AccountEvent account = (AccountEvent) consumerRecord.value();
-				if (account.getEventType().toString().contains("SnapshotBeginEvent"))
+				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
+				if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent"))
 					System.out.println("Snapshot begin event detected");
-				if (account.getEventType().toString().contains("SnapshotEvent"))
-					accountRepository.createAccount(account.getV1());
-				if (account.getEventType().toString().contains("SnapshotEndEvent")) {
+				if (accountEvent.getEventType().toString().contains("SnapshotEvent"))
+					accountRepository.createAccount(accountEvent.getV1());
+				if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")) {
 					System.out.println("Snapshot end event detected");
 					return;
 				}
@@ -167,6 +167,7 @@ public class SnapshotV1 {
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
 		accountEvent.setV1(accountV1);
+		accountEvent.setVersion(1L);
 		producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
 	}
 
@@ -175,13 +176,7 @@ public class SnapshotV1 {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		AccountV1 accountV1 = new AccountV1();
-		accountV1.setId("");
-		accountV1.setName("");
-		accountV1.setOpeningBalance("");
-		accountV1.setSavingsRate("");
-		accountV1.setType("");
-		accountEvent.setV1(accountV1);
+		accountEvent.setVersion(1L);
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
 	}
 
