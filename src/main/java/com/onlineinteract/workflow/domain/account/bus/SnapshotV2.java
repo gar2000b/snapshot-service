@@ -100,10 +100,10 @@ public class SnapshotV2 {
 					accountRepository.updateAccount(accountEvent.getV1());
 
 				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent")
-						&& accountEvent.getVersion() == 2)
+						&& accountEvent.getVersion() >= 2)
 					accountRepository.createAccount(accountEvent.getV2());
 				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent")
-						&& accountEvent.getVersion() == 2)
+						&& accountEvent.getVersion() >= 2)
 					accountRepository.updateAccount(accountEvent.getV2());
 				if (!(accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
 						|| accountEvent.getEventType().toString().contains("SnapshotEvent")
