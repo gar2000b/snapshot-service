@@ -3,6 +3,7 @@ package com.onlineinteract.workflow.utility;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonParser {
@@ -20,6 +21,7 @@ public class JsonParser {
 
 	public static <T> T fromJson(String json, Class<T> c) {
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		T readValue = null;
 		try {
 			readValue = mapper.readValue(json, c);

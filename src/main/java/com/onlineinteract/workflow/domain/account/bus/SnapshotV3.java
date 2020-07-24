@@ -22,7 +22,7 @@ import com.mongodb.client.MongoDatabase;
 import com.onlineinteract.workflow.dbclient.DbClient;
 import com.onlineinteract.workflow.domain.account.AccountEvent;
 import com.onlineinteract.workflow.domain.account.repository.AccountRepository;
-import com.onlineinteract.workflow.domain.account.v2.AccountV2;
+import com.onlineinteract.workflow.domain.account.v3.AccountV3;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.model.SnapshotInfo.Domain;
 import com.onlineinteract.workflow.model.SnapshotInfo.Version;
@@ -33,7 +33,7 @@ import com.onlineinteract.workflow.utility.MongoUtility;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 @Component
-public class SnapshotV2 {
+public class SnapshotV3 {
 
 	private static final String ACCOUNT_EVENT_TOPIC = "account-event-topic";
 
@@ -93,19 +93,19 @@ public class SnapshotV2 {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
 				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
 				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent")
-						&& accountEvent.getVersion() == 1)
-					accountRepository.createAccount(accountEvent.getV1());
-				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent")
-						&& accountEvent.getVersion() == 1)
-					accountRepository.updateAccount(accountEvent.getV1());
-
-				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent")
-						&& accountEvent.getVersion() >= 2)
+						&& accountEvent.getVersion() == 2)
 					accountRepository.createAccount(accountEvent.getV2());
 				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent")
-						&& accountEvent.getVersion() >= 2)
+						&& accountEvent.getVersion() == 2)
 					accountRepository.updateAccount(accountEvent.getV2());
-				
+
+				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent")
+						&& accountEvent.getVersion() >= 3)
+					accountRepository.createAccount(accountEvent.getV3());
+				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent")
+						&& accountEvent.getVersion() >= 3)
+					accountRepository.updateAccount(accountEvent.getV3());
+
 				if (!(accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
 						|| accountEvent.getEventType().toString().contains("SnapshotEvent")
 						|| accountEvent.getEventType().toString().contains("SnapshotEndEvent"))) {
@@ -138,20 +138,6 @@ public class SnapshotV2 {
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
 				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
-				if (versionReconstitutedFrom == 1) {
-					if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
-							&& accountEvent.getVersion() == 1)
-						System.out.println("Snapshot begin event detected");
-					if (accountEvent.getEventType().toString().contains("SnapshotEvent")
-							&& accountEvent.getVersion() == 1) {
-						accountRepository.createAccount(accountEvent.getV1());
-					}
-					if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")
-							&& accountEvent.getVersion() == 1) {
-						System.out.println("Snapshot end event detected");
-						return;
-					}
-				}
 				if (versionReconstitutedFrom == 2) {
 					if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
 							&& accountEvent.getVersion() == 2)
@@ -162,6 +148,20 @@ public class SnapshotV2 {
 					}
 					if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")
 							&& accountEvent.getVersion() == 2) {
+						System.out.println("Snapshot end event detected");
+						return;
+					}
+				}
+				if (versionReconstitutedFrom == 3) {
+					if (accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
+							&& accountEvent.getVersion() == 3)
+						System.out.println("Snapshot begin event detected");
+					if (accountEvent.getEventType().toString().contains("SnapshotEvent")
+							&& accountEvent.getVersion() == 3) {
+						accountRepository.createAccount(accountEvent.getV3());
+					}
+					if (accountEvent.getEventType().toString().contains("SnapshotEndEvent")
+							&& accountEvent.getVersion() == 3) {
 						System.out.println("Snapshot end event detected");
 						return;
 					}
@@ -184,35 +184,31 @@ public class SnapshotV2 {
 		publishSnapshotMarkerEvent("SnapshotBeginEvent");
 		for (Document accountDocument : accountDocumentsIterable) {
 			MongoUtility.removeMongoId(accountDocument);
-			AccountV2 accountV2 = JsonParser.fromJson(accountDocument.toJson(), AccountV2.class);
-			if (versionReconstitutedFrom == 1) {
-				if (accountV2.getAddr1() == null) {
-					System.out.println("addr1 is null");
-					accountV2.setAddr1("");
+			AccountV3 accountV3 = JsonParser.fromJson(accountDocument.toJson(), AccountV3.class);
+			if (versionReconstitutedFrom == 2) {
+				if (accountV3.getAddr() == null) {
+					System.out.println("addr is null");
+					accountV3.setAddr("");
 				}
-				if (accountV2.getAddr2() == null) {
-					System.out.println("addr2 is null");
-					accountV2.setAddr2("");
-				}
-				if (accountV2.getEnabled() == null) {
+				if (accountV3.getEnabled() == null) {
 					System.out.println("enabled is null");
-					accountV2.setEnabled(false);
+					accountV3.setEnabled(false);
 				}
 			}
-			publishSnapshotEvent("SnapshotEvent", accountV2);
+			publishSnapshotEvent("SnapshotEvent", accountV3);
 			System.out.println("AccountCreatedEvent Published to account-event-topic");
 		}
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
 
-	private void publishSnapshotEvent(String eventType, AccountV2 account) {
+	private void publishSnapshotEvent(String eventType, AccountV3 accountV3) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		accountEvent.setV2(account);
-		accountEvent.setVersion(2L);
-		producer.publishRecord("account-event-topic", accountEvent, account.getId().toString());
+		accountEvent.setV3(accountV3);
+		accountEvent.setVersion(3L);
+		producer.publishRecord("account-event-topic", accountEvent, accountV3.getId().toString());
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -220,7 +216,7 @@ public class SnapshotV2 {
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		accountEvent.setVersion(2L);
+		accountEvent.setVersion(3L);
 		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
 	}
 
@@ -230,7 +226,7 @@ public class SnapshotV2 {
 
 		List<Version> versions = accountsDomain.getVersions();
 		for (Version version : versions) {
-			if (version.getVersion() == 2) {
+			if (version.getVersion() == 3) {
 				version.setBeginSnapshotOffset(beginSnapshotOffset);
 				version.setEndSnapshotOffset(endSnapshotOffset);
 				snapshotInfo.getDomains().get("accounts").setVersions(versions);
@@ -240,7 +236,7 @@ public class SnapshotV2 {
 		}
 
 		for (Version version : versions) {
-			if (version.getVersion() == 1)
+			if (version.getVersion() == 2)
 				if (version.getEndSnapshotOffset() == endSnapshotOffset)
 					return;
 		}
@@ -248,7 +244,7 @@ public class SnapshotV2 {
 		Version version = new Version();
 		version.setBeginSnapshotOffset(beginSnapshotOffset);
 		version.setEndSnapshotOffset(endSnapshotOffset);
-		version.setVersion(2);
+		version.setVersion(3);
 		versions.add(version);
 		snapshotInfo.getDomains().get("accounts").setVersions(versions);
 		snapshotRepository.updateSnapshotInfo(snapshotInfo);
@@ -262,18 +258,18 @@ public class SnapshotV2 {
 		} else {
 			List<Version> versions = accountsDomain.getVersions();
 			for (Version version : versions) {
-				if (version.getVersion() == 2) {
+				if (version.getVersion() == 3) {
 					beginSnapshotOffset = version.getEndSnapshotOffset() + 1;
 					endSnapshotOffset = version.getEndSnapshotOffset();
-					versionReconstitutedFrom = 2;
+					versionReconstitutedFrom = 3;
 					return;
 				}
 			}
 			for (Version version : versions) {
-				if (version.getVersion() == 1) {
+				if (version.getVersion() == 2) {
 					beginSnapshotOffset = version.getEndSnapshotOffset() + 1;
 					endSnapshotOffset = version.getEndSnapshotOffset();
-					versionReconstitutedFrom = 1;
+					versionReconstitutedFrom = 2;
 					return;
 				}
 			}

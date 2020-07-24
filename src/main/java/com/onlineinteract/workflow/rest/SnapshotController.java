@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.onlineinteract.workflow.domain.account.bus.SnapshotV1;
 import com.onlineinteract.workflow.domain.account.bus.SnapshotV2;
+import com.onlineinteract.workflow.domain.account.bus.SnapshotV3;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.repository.SnapshotRepository;
 import com.onlineinteract.workflow.utility.JsonParser;
@@ -29,6 +30,9 @@ public class SnapshotController {
 
 	@Autowired
 	SnapshotV2 snapshotConsumerV2;
+
+	@Autowired
+	SnapshotV3 snapshotConsumerV3;
 
 	@RequestMapping(method = RequestMethod.POST, consumes = "application/json", produces = "application/json", value = "/snapshot-info")
 	@ResponseBody
@@ -61,6 +65,8 @@ public class SnapshotController {
 				snapshotConsumerV1.executeSnapshot();
 			if (version == 2)
 				snapshotConsumerV2.executeSnapshot();
+			if (version == 3)
+				snapshotConsumerV3.executeSnapshot();
 		}
 	}
 }
