@@ -41,7 +41,7 @@ public class AccountRepository {
 		MongoDatabase database = dbClient.getMongoClient().getDatabase(DbClient.DATABASE);
 		Document accountDocument = Document.parse(accountV1.toString());
 		MongoCollection<Document> accountsCollection = database.getCollection("accounts");
-		accountsCollection.replaceOne(new Document("id", accountV1.getId()), accountDocument);
+		accountsCollection.replaceOne(new Document("id", accountV1.getId().toString()), accountDocument);
 		System.out.println("Account Updated in accounts collection");
 	}
 
@@ -72,7 +72,7 @@ public class AccountRepository {
 		MongoDatabase database = dbClient.getMongoClient().getDatabase(DbClient.DATABASE);
 		Document accountDocument = Document.parse(accountV2.toString());
 		MongoCollection<Document> accountsCollection = database.getCollection("accounts");
-		accountsCollection.replaceOne(new Document("id", accountV2.getId()), accountDocument);
+		accountsCollection.replaceOne(new Document("id", accountV2.getId().toString()), accountDocument);
 		System.out.println("Account Updated in accounts collection");
 	}
 	
@@ -103,7 +103,7 @@ public class AccountRepository {
 		MongoDatabase database = dbClient.getMongoClient().getDatabase(DbClient.DATABASE);
 		Document accountDocument = Document.parse(accountV3.toString());
 		MongoCollection<Document> accountsCollection = database.getCollection("accounts");
-		accountsCollection.replaceOne(new Document("id", accountV3.getId()), accountDocument);
+		accountsCollection.replaceOne(new Document("id", accountV3.getId().toString()), accountDocument);
 		System.out.println("Account Updated in accounts collection");
 	}
 	
