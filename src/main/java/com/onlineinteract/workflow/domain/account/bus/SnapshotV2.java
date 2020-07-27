@@ -294,7 +294,7 @@ public class SnapshotV2 {
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
 		properties.put("bootstrap.servers", "tiny.canadacentral.cloudapp.azure.com:29092");
-		properties.put("group.id", "account-event-topic-snapshot");
+		properties.put("group.id", "account-event-topic-snapshotv2");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
 		properties.put("key.deserializer", StringDeserializer.class);
