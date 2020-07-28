@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PreDestroy;
 
@@ -21,8 +22,8 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.onlineinteract.workflow.dbclient.DbClient;
-import com.onlineinteract.workflow.domain.account.repository.AccountRepository;
 import com.onlineinteract.workflow.domain.account.AccountEvent;
+import com.onlineinteract.workflow.domain.account.repository.AccountRepository;
 import com.onlineinteract.workflow.domain.account.v1.AccountV1;
 import com.onlineinteract.workflow.model.SnapshotInfo;
 import com.onlineinteract.workflow.model.SnapshotInfo.Domain;
@@ -170,7 +171,20 @@ public class SnapshotV1 {
 		accountEvent.setEventType(eventType);
 		accountEvent.setVersion(1L);
 		accountEvent.setV1(accountV1);
-		producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountV1.getId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -179,7 +193,20 @@ public class SnapshotV1 {
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
 		accountEvent.setVersion(1L);
-		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void updateSnapshotInfo() {

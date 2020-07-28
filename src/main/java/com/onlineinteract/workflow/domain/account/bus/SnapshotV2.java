@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PreDestroy;
 
@@ -105,7 +106,7 @@ public class SnapshotV2 {
 				if (accountEvent.getEventType().toString().contains("AccountUpdatedEvent")
 						&& accountEvent.getVersion() >= 2)
 					accountRepository.updateAccount(accountEvent.getV2());
-				
+
 				if (!(accountEvent.getEventType().toString().contains("SnapshotBeginEvent")
 						|| accountEvent.getEventType().toString().contains("SnapshotEvent")
 						|| accountEvent.getEventType().toString().contains("SnapshotEndEvent"))) {
@@ -205,14 +206,27 @@ public class SnapshotV2 {
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
 
-	private void publishSnapshotEvent(String eventType, AccountV2 account) {
+	private void publishSnapshotEvent(String eventType, AccountV2 accountV2) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		accountEvent.setV2(account);
+		accountEvent.setV2(accountV2);
 		accountEvent.setVersion(2L);
-		producer.publishRecord("account-event-topic", accountEvent, account.getId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountV2.getId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountV2.getId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -221,7 +235,20 @@ public class SnapshotV2 {
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
 		accountEvent.setVersion(2L);
-		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void updateSnapshotInfo() {

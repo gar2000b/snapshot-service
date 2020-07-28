@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PreDestroy;
 
@@ -208,7 +209,20 @@ public class SnapshotV3 {
 		accountEvent.setEventType(eventType);
 		accountEvent.setV3(accountV3);
 		accountEvent.setVersion(3L);
-		producer.publishRecord("account-event-topic", accountEvent, accountV3.getId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountV3.getId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountV3.getId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -217,7 +231,20 @@ public class SnapshotV3 {
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
 		accountEvent.setVersion(3L);
-		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void updateSnapshotInfo() {
