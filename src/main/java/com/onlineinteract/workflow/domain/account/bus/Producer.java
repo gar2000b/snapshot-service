@@ -30,10 +30,10 @@ public class Producer {
 
 	private Properties buildProducerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "tiny.canadacentral.cloudapp.azure.com:29092");
+		properties.put("bootstrap.servers", "colossal.canadacentral.cloudapp.azure.com:29092");
 		properties.put("key.serializer", StringSerializer.class);
 		properties.put("value.serializer", KafkaAvroSerializer.class);
-		properties.put("schema.registry.url", "http://tiny.canadacentral.cloudapp.azure.com:8081");
+		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
 		return properties;
 	}
 }
