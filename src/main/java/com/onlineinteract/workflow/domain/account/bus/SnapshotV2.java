@@ -320,7 +320,7 @@ public class SnapshotV2 {
 
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "colossal.canadacentral.cloudapp.azure.com:29092");
+		properties.put("bootstrap.servers", "colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:39092,colossal.canadacentral.cloudapp.azure.com:49092,colossal.canadacentral.cloudapp.azure.com:49092");
 		properties.put("group.id", "account-event-topic-snapshotv2");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
