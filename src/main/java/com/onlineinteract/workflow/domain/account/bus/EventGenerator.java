@@ -28,7 +28,7 @@ public class EventGenerator {
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		System.out.println("AccountCreatedEvent Published to account-event-topic");
+//		System.out.println("AccountCreatedEvent Published to account-event-topic");
 	}
 
 	public void updateAccount(AccountV3 accountV3) {

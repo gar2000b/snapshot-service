@@ -1,6 +1,5 @@
 package com.onlineinteract.workflow.domain.account.bus;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -54,6 +53,7 @@ public class SnapshotV1 {
 	private KafkaConsumer<String, AccountEvent> consumer;
 	private boolean runningFlag = false;
 	private long beginSnapshotOffset;
+	private long endOffset;
 	private long endSnapshotOffset;
 
 	public void executeSnapshot() {
@@ -77,8 +77,10 @@ public class SnapshotV1 {
 			reconstitutePreviousSnapshot();
 
 		consumer.poll(0);
-		for (TopicPartition partition : consumer.assignment())
+		for (TopicPartition partition : consumer.assignment()) {
+			endOffset = consumer.position(partition);
 			consumer.seek(partition, beginSnapshotOffset);
+		}
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -89,6 +91,8 @@ public class SnapshotV1 {
 		System.out.println("Spinning up kafka account consumer");
 		while (runningFlag) {
 			ConsumerRecords<String, AccountEvent> records = consumer.poll(100);
+			if (records.count() == 0)
+				runningFlag = false;
 			System.out.println("*** records count 2: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
@@ -103,7 +107,7 @@ public class SnapshotV1 {
 					endSnapshotOffset = consumerRecord.offset();
 				}
 			}
-			if (records.count() == 0)
+			if (endSnapshotOffset >= endOffset - 1)
 				runningFlag = false;
 		}
 		shutdownConsumer();
@@ -159,7 +163,7 @@ public class SnapshotV1 {
 			MongoUtility.removeMongoId(accountDocument);
 			AccountV1 accountV1 = JsonParser.fromJson(accountDocument.toJson(), AccountV1.class);
 			publishSnapshotEvent("SnapshotEvent", accountV1);
-			System.out.println("AccountCreatedEvent Published to account-event-topic");
+//			System.out.println("AccountCreatedEvent Published to account-event-topic");
 		}
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
@@ -212,35 +216,24 @@ public class SnapshotV1 {
 	private void updateSnapshotInfo() {
 		SnapshotInfo snapshotInfo = snapshotRepository.getSnapshotInfo();
 		Domain accountsDomain = snapshotInfo.getDomains().get("accounts");
-		if (accountsDomain == null) {
-			createAccountsDomain(snapshotInfo);
-			return;
-		}
 
 		List<Version> versions = accountsDomain.getVersions();
 		for (Version version : versions) {
 			if (version.getVersion() == 1) {
 				version.setBeginSnapshotOffset(beginSnapshotOffset);
 				version.setEndSnapshotOffset(endSnapshotOffset);
-				break;
+				snapshotInfo.getDomains().get("accounts").setVersions(versions);
+				snapshotRepository.updateSnapshotInfo(snapshotInfo);
+				return;
 			}
 		}
-		snapshotInfo.getDomains().get("accounts").setVersions(versions);
-		snapshotRepository.updateSnapshotInfo(snapshotInfo);
-	}
 
-	private void createAccountsDomain(SnapshotInfo snapshotInfo) {
-		Domain accountsDomain = new Domain();
-		accountsDomain.setCollection("accounts");
-		accountsDomain.setTopic("account-event-topic");
 		Version version = new Version();
 		version.setBeginSnapshotOffset(beginSnapshotOffset);
 		version.setEndSnapshotOffset(endSnapshotOffset);
 		version.setVersion(1);
-		ArrayList<Version> versions = new ArrayList<Version>();
 		versions.add(version);
-		accountsDomain.setVersions(versions);
-		snapshotInfo.getDomains().put("accounts", accountsDomain);
+		snapshotInfo.getDomains().get("accounts").setVersions(versions);
 		snapshotRepository.updateSnapshotInfo(snapshotInfo);
 	}
 
@@ -274,13 +267,14 @@ public class SnapshotV1 {
 
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "localhost:29092,localhost:29092,localhost:39092,localhost:49092,localhost:49092");
+		properties.put("bootstrap.servers",
+				"colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:39092,colossal.canadacentral.cloudapp.azure.com:49092,colossal.canadacentral.cloudapp.azure.com:49092");
 		properties.put("group.id", "account-event-topic-snapshotv1");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
 		properties.put("key.deserializer", StringDeserializer.class);
 		properties.put("value.deserializer", KafkaAvroDeserializer.class);
-		properties.put("schema.registry.url", "http://localhost:8081");
+		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
 		properties.put("specific.avro.reader", "true");
 		return properties;
 	}

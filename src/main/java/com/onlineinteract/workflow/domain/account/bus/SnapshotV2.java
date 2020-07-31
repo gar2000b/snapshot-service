@@ -54,6 +54,7 @@ public class SnapshotV2 {
 	private boolean runningFlag = false;
 	private long beginSnapshotOffset;
 	private long endSnapshotOffset;
+	private long endOffset;
 	private long versionReconstitutedFrom;
 
 	public void executeSnapshot() {
@@ -77,8 +78,10 @@ public class SnapshotV2 {
 			reconstitutePreviousSnapshot();
 
 		consumer.poll(0);
-		for (TopicPartition partition : consumer.assignment())
+		for (TopicPartition partition : consumer.assignment()) {
+			endOffset = consumer.position(partition);
 			consumer.seek(partition, beginSnapshotOffset);
+		}
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -89,6 +92,8 @@ public class SnapshotV2 {
 		System.out.println("Spinning up kafka account consumer");
 		while (runningFlag) {
 			ConsumerRecords<String, AccountEvent> records = consumer.poll(100);
+			if (records.count() == 0)
+				runningFlag = false;
 			System.out.println("*** records count 2: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
@@ -113,7 +118,7 @@ public class SnapshotV2 {
 					endSnapshotOffset = consumerRecord.offset();
 				}
 			}
-			if (records.count() == 0)
+			if (endSnapshotOffset >= endOffset - 1)
 				runningFlag = false;
 		}
 		shutdownConsumer();
@@ -201,7 +206,7 @@ public class SnapshotV2 {
 				}
 			}
 			publishSnapshotEvent("SnapshotEvent", accountV2);
-			System.out.println("AccountCreatedEvent Published to account-event-topic");
+//			System.out.println("AccountCreatedEvent Published to account-event-topic");
 		}
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
@@ -320,13 +325,14 @@ public class SnapshotV2 {
 
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "localhost:29092,localhost:29092,localhost:39092,localhost:49092,localhost:49092");
+		properties.put("bootstrap.servers",
+				"colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:39092,colossal.canadacentral.cloudapp.azure.com:49092,colossal.canadacentral.cloudapp.azure.com:49092");
 		properties.put("group.id", "account-event-topic-snapshotv2");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
 		properties.put("key.deserializer", StringDeserializer.class);
 		properties.put("value.deserializer", KafkaAvroDeserializer.class);
-		properties.put("schema.registry.url", "http://localhost:8081");
+		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
 		properties.put("specific.avro.reader", "true");
 		return properties;
 	}
