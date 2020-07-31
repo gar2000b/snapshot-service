@@ -274,13 +274,13 @@ public class SnapshotV1 {
 
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:39092,colossal.canadacentral.cloudapp.azure.com:49092,colossal.canadacentral.cloudapp.azure.com:49092");
+		properties.put("bootstrap.servers", "localhost:29092,localhost:29092,localhost:39092,localhost:49092,localhost:49092");
 		properties.put("group.id", "account-event-topic-snapshotv1");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
 		properties.put("key.deserializer", StringDeserializer.class);
 		properties.put("value.deserializer", KafkaAvroDeserializer.class);
-		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
+		properties.put("schema.registry.url", "http://localhost:8081");
 		properties.put("specific.avro.reader", "true");
 		return properties;
 	}
