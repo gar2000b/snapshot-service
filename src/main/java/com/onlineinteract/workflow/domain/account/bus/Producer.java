@@ -1,9 +1,11 @@
 package com.onlineinteract.workflow.domain.account.bus;
 
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +22,11 @@ public class Producer {
 		producer = new KafkaProducer<String, AccountEvent>(producerProps);
 	}
 
-	public void publishRecord(String topic, AccountEvent value, String key) {
-		producer.send(new ProducerRecord<>(topic, key, value));
+	public void publishRecord(String topic, AccountEvent value, String key)
+			throws InterruptedException, ExecutionException {
+		RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, key, value)).get();
+//		System.out.println("Record sent with key " + key + " to partition " + metadata.partition() + " with offset "
+//		+ metadata.offset());
 	}
 
 	private Properties buildProducerProperties() {
@@ -29,7 +34,7 @@ public class Producer {
 		properties.put("bootstrap.servers", "tiny.canadacentral.cloudapp.azure.com:29092");
 		properties.put("key.serializer", StringSerializer.class);
 		properties.put("value.serializer", KafkaAvroSerializer.class);
-		properties.put("schema.registry.url", "http://tiny.canadacentral.cloudapp.azure.com:8081");
+		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
 		return properties;
 	}
 }

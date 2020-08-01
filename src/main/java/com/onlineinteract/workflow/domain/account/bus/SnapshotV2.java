@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.PreDestroy;
 
@@ -53,6 +54,7 @@ public class SnapshotV2 {
 	private boolean runningFlag = false;
 	private long beginSnapshotOffset;
 	private long endSnapshotOffset;
+	private long endOffset;
 	private long versionReconstitutedFrom;
 
 	public void executeSnapshot() {
@@ -76,8 +78,10 @@ public class SnapshotV2 {
 			reconstitutePreviousSnapshot();
 
 		consumer.poll(0);
-		for (TopicPartition partition : consumer.assignment())
+		for (TopicPartition partition : consumer.assignment()) {
+			endOffset = consumer.position(partition);
 			consumer.seek(partition, beginSnapshotOffset);
+		}
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -90,6 +94,8 @@ public class SnapshotV2 {
 			ConsumerRecords<String, AccountEvent> records = consumer.poll(100);
 			System.out.println("*** records count 2: " + records.count());
 			for (ConsumerRecord<String, AccountEvent> consumerRecord : records) {
+				if (records.count() == 0)
+					runningFlag = false;
 				System.out.println("Consuming event from account-event-topic with id/key of: " + consumerRecord.key());
 				AccountEvent accountEvent = (AccountEvent) consumerRecord.value();
 				if (accountEvent.getEventType().toString().contains("AccountCreatedEvent")
@@ -111,7 +117,7 @@ public class SnapshotV2 {
 					endSnapshotOffset = consumerRecord.offset();
 				}
 			}
-			if (records.count() == 0)
+			if (endSnapshotOffset >= endOffset - 1)
 				runningFlag = false;
 		}
 		shutdownConsumer();
@@ -204,14 +210,27 @@ public class SnapshotV2 {
 		publishSnapshotMarkerEvent("SnapshotEndEvent");
 	}
 
-	private void publishSnapshotEvent(String eventType, AccountV2 account) {
+	private void publishSnapshotEvent(String eventType, AccountV2 accountV2) {
 		AccountEvent accountEvent = new AccountEvent();
 		accountEvent.setCreated(new Date().getTime());
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
-		accountEvent.setV2(account);
+		accountEvent.setV2(accountV2);
 		accountEvent.setVersion(2L);
-		producer.publishRecord("account-event-topic", accountEvent, account.getId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountV2.getId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountV2.getId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void publishSnapshotMarkerEvent(String eventType) {
@@ -220,7 +239,20 @@ public class SnapshotV2 {
 		accountEvent.setEventId(String.valueOf(accountEvent.getCreated()));
 		accountEvent.setEventType(eventType);
 		accountEvent.setVersion(2L);
-		producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		try {
+			producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+			try {
+				Thread.sleep(3000);
+				producer.publishRecord("account-event-topic", accountEvent, accountEvent.getEventId().toString());
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			} catch (ExecutionException e1) {
+				e1.printStackTrace();
+				System.out.println("Couldn't publish event: " + eventType);
+			}
+		}
 	}
 
 	private void updateSnapshotInfo() {
@@ -292,13 +324,14 @@ public class SnapshotV2 {
 
 	private Properties buildConsumerProperties() {
 		Properties properties = new Properties();
-		properties.put("bootstrap.servers", "tiny.canadacentral.cloudapp.azure.com:29092");
-		properties.put("group.id", "account-event-topic-snapshot");
+		properties.put("bootstrap.servers",
+				"colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:29092,colossal.canadacentral.cloudapp.azure.com:39092,colossal.canadacentral.cloudapp.azure.com:49092,colossal.canadacentral.cloudapp.azure.com:49092");
+		properties.put("group.id", "account-event-topic-snapshotv2");
 		properties.put("enable.auto.commit", "false");
 		properties.put("max.poll.records", "200");
 		properties.put("key.deserializer", StringDeserializer.class);
 		properties.put("value.deserializer", KafkaAvroDeserializer.class);
-		properties.put("schema.registry.url", "http://tiny.canadacentral.cloudapp.azure.com:8081");
+		properties.put("schema.registry.url", "http://colossal.canadacentral.cloudapp.azure.com:8081");
 		properties.put("specific.avro.reader", "true");
 		return properties;
 	}
